@@ -8,9 +8,8 @@ An interactive, single-file web visualization of how **Astrophage** — the star
 
 ## Live demo
 
-Once deployed to GitHub Pages: `https://<your-username>.github.io/<repo-name>/`
+Hosted on Github Page: `https://ohadios.github.io/astrophage-visual-model/`
 
-*(Replace with your actual URL after you enable Pages — see [Deploying](#deploying-to-github-pages).)*
 
 ---
 
