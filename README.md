@@ -66,7 +66,7 @@ The in-app **Notes** modal carries the authoritative, detailed version. In brief
 - Dimming caps at **~10%**, unexplained; ~30 years to ice age.
 - Tau Ceti resisted because Adrian hosts **Taumoeba**, which needs CO₂ and dies at Venus's nitrogen levels (hence the bred "Taumoeba-82.5").
 
-### Our assumptions (to make it run)
+### My assumptions (to make it run)
 - **8-day charge time** — a working figure, not pinned down in the book.
 - **Growth rate** (the big one): canon implies each ~15-day cycle *doubles* the population, which would shroud the Sun in months — yet canon also says ~30 years to 10%. We reconcile this internal tension by imposing a slow logistic curve (~1.4% net per cycle, ~2.1-year doubling) so the colony climbs from ~0.01% dimming at detection to 10% in ~30 years. A real limiter (self-shading, CO₂-limited breeding, migration mortality) would make it emergent.
 - **Detection start:** the clock begins at first detection (~0.01% dimming ≈ ~30 trillion cells ≈ 0.1% of peak).
@@ -106,16 +106,6 @@ An internet connection is recommended so the Google Fonts load; without it the l
 
 ---
 
-## Deploying to GitHub Pages
-
-1. Create a **public** repository on GitHub.
-2. Add the HTML file to the repo and **name it `index.html`** (this makes it load at the bare URL).
-3. Go to **Settings → Pages → Build and deployment**. Set **Source = Deploy from a branch**, **Branch = `main`**, **folder = `/ (root)`**, and **Save**.
-4. Wait ~1–2 minutes; the site goes live at `https://<your-username>.github.io/<repo-name>/` (HTTPS automatic).
-5. To update, commit a new `index.html` — Pages redeploys automatically.
-
----
-
 ## Tech notes
 
 - **Stack:** vanilla JavaScript + HTML5 Canvas 2D. No frameworks, no bundler.
@@ -128,7 +118,7 @@ An internet connection is recommended so the Google Fonts load; without it the l
 
 ## Feedback
 
-The app embeds a feedback form (Getformly) behind the **✉ Feedback** button so visitors can flag bad facts or suggest better-justified assumptions. To point it at a different form, replace the form URL in the `#fbFrame` iframe (and the "open in a new tab" link) inside `index.html`.
+The app embeds a feedback form behind the **✉ Feedback** button so visitors can flag bad facts or suggest better-justified assumptions. To point it at a different form, replace the form URL in the `#fbFrame` iframe (and the "open in a new tab" link) inside `index.html`.
 
 ---
 
