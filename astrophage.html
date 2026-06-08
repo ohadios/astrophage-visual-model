@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Petrova Taskforce — Solar Infection Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --petrova:#ff3b5c;
+    --petrova-soft:#ff7088;
+    --amber:#ffb648;
+    --ice:#8fe0ff;
+    --venus:#f0d39a;
+    --earth:#5aa2ff;
+    --ink:#05060c;
+    --panel:rgba(13,15,26,0.72);
+    --panel-line:rgba(255,59,92,0.35);
+    --text:#e8ecf5;
+    --text-dim:#8b93ab;
+    --grid:rgba(120,140,200,0.10);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;width:100%;overflow:hidden;background:var(--ink);}
+  body{font-family:'IBM Plex Mono',monospace;color:var(--text);position:relative;}
+  #stage{position:fixed;inset:0;display:block;}
+
+  .panel{
+    position:fixed;background:var(--panel);
+    border:1px solid var(--panel-line);
+    border-radius:14px;
+    backdrop-filter:blur(14px) saturate(1.2);
+    -webkit-backdrop-filter:blur(14px) saturate(1.2);
+    box-shadow:0 10px 40px rgba(0,0,0,0.55), inset 0 0 0 1px rgba(255,255,255,0.03);
+    z-index:5;
+  }
+  .panel::before{
+    content:"";position:absolute;inset:0;border-radius:14px;pointer-events:none;
+    background:radial-gradient(120% 60% at 0% 0%, rgba(255,59,92,0.06), transparent 60%);
+  }
+
+  /* Header */
+  #header{top:18px;left:18px;padding:14px 18px 12px;max-width:340px;}
+  #header h1{
+    font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:15px;
+    letter-spacing:2.5px;text-transform:uppercase;color:#fff;line-height:1.2;
+  }
+  #header h1 .accent{color:var(--petrova);}
+  #header .sub{
+    font-size:10.5px;color:var(--text-dim);letter-spacing:1px;margin-top:5px;line-height:1.5;
+  }
+  #header .badge{
+    display:inline-block;margin-top:8px;font-size:9px;letter-spacing:2px;
+    color:var(--petrova-soft);border:1px solid var(--panel-line);
+    padding:3px 8px;border-radius:20px;text-transform:uppercase;
+  }
+
+  /* Telemetry */
+  #telemetry{top:18px;right:18px;padding:14px 16px;min-width:212px;}
+  .tele-row{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px dashed rgba(255,255,255,0.06);position:relative;cursor:help;}
+  .tele-row[data-tip]:hover::after{
+    content:attr(data-tip);position:absolute;right:calc(100% + 14px);top:-6px;width:232px;
+    background:rgba(9,11,20,0.97);border:1px solid var(--panel-line);border-radius:9px;
+    padding:9px 11px;font-size:10px;line-height:1.5;letter-spacing:0.2px;color:var(--text);
+    text-transform:none;font-weight:400;box-shadow:0 10px 28px rgba(0,0,0,0.6);z-index:40;pointer-events:none;
+  }
+  .tele-row:last-child{border-bottom:none;}
+  .tele-label{font-size:9.5px;letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;}
+  .tele-val{font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:16px;letter-spacing:0.5px;}
+  .tele-val small{font-size:10px;font-weight:400;color:var(--text-dim);margin-left:3px;}
+  #statusLine{
+    margin-top:10px;text-align:center;font-family:'Chakra Petch',sans-serif;
+    font-weight:600;font-size:11px;letter-spacing:2px;text-transform:uppercase;
+    padding:7px;border-radius:8px;transition:all .4s;
+  }
+
+  /* Controls */
+  #controls{bottom:18px;left:18px;padding:16px 18px;min-width:320px;}
+  .ctrl-title{font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:10px;letter-spacing:2.5px;color:var(--petrova-soft);text-transform:uppercase;margin-bottom:12px;}
+  .slider-block{margin-bottom:14px;}
+  .slider-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;}
+  .slider-head label{font-size:10px;letter-spacing:1.2px;color:var(--text-dim);text-transform:uppercase;}
+  .slider-head .v{font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:13px;color:var(--text);}
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:4px;
+    background:linear-gradient(90deg,var(--petrova),rgba(255,59,92,0.15));outline:none;cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;
+    background:#fff;border:2px solid var(--petrova);box-shadow:0 0 10px rgba(255,59,92,0.6);cursor:pointer;
+  }
+  input[type=range]::-moz-range-thumb{
+    width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid var(--petrova);
+    box-shadow:0 0 10px rgba(255,59,92,0.6);cursor:pointer;
+  }
+  .btn-row{display:flex;gap:8px;margin-top:4px;}
+  button{
+    flex:1;font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:11px;letter-spacing:1.5px;
+    text-transform:uppercase;color:var(--text);background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:9px 6px;cursor:pointer;transition:all .18s;
+  }
+  button:hover{background:rgba(255,59,92,0.14);border-color:var(--panel-line);color:#fff;}
+  button.active{background:rgba(255,59,92,0.2);border-color:var(--petrova);color:#fff;}
+  .toggle-row{display:flex;gap:8px;margin-top:8px;}
+
+  /* Legend */
+  #legend{bottom:18px;right:18px;padding:13px 16px;}
+  .leg-title{font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:9px;letter-spacing:2.5px;color:var(--petrova-soft);text-transform:uppercase;margin-bottom:9px;}
+  .leg-item{display:flex;align-items:center;gap:8px;padding:3px 0;font-size:10px;color:var(--text-dim);letter-spacing:0.5px;}
+  .leg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;box-shadow:0 0 7px currentColor;}
+
+  .hint{font-size:9px;color:var(--text-dim);letter-spacing:0.5px;margin-top:10px;line-height:1.5;opacity:0.75;}
+
+  /* Graph panel */
+  #graphPanel{bottom:18px;left:50%;transform:translateX(-50%);width:400px;max-width:calc(100vw - 36px);padding:12px 14px 8px;display:none;}
+  #graphPanel.show{display:block;}
+  .gp-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px;}
+  .gp-title{font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:10px;letter-spacing:2px;color:var(--petrova-soft);text-transform:uppercase;}
+  .gp-leg{display:flex;gap:11px;font-size:9px;color:var(--text-dim);}
+  .gp-leg span{display:flex;align-items:center;gap:4px;}
+  .gp-leg i{width:13px;height:3px;border-radius:2px;display:inline-block;}
+  #graphCanvas{width:100%;height:138px;display:block;}
+
+  /* Modal */
+  #modalBack,#fbBack{position:fixed;inset:0;background:rgba(3,4,10,0.80);backdrop-filter:blur(7px);z-index:50;display:none;align-items:center;justify-content:center;padding:24px;}
+  #modalBack.show,#fbBack.show{display:flex;}
+  #modal,#fbModal{max-width:780px;width:100%;max-height:86vh;overflow-y:auto;background:linear-gradient(180deg,#0f1222,#0a0c16);border:1px solid var(--panel-line);border-radius:16px;box-shadow:0 24px 80px rgba(0,0,0,0.7);padding:24px 28px 30px;}
+  #fbModal{max-width:1040px;max-height:92vh;padding:20px 22px 22px;}
+  #modal h2{font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:18px;letter-spacing:1.5px;color:#fff;text-transform:uppercase;}
+  #modal h2 .accent{color:var(--petrova);}
+  #modal .m-sub{font-size:11px;color:var(--text-dim);margin:4px 0 14px;letter-spacing:0.5px;line-height:1.5;}
+  #modal h3{font-family:'Chakra Petch',sans-serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin:20px 0 8px;padding-bottom:5px;border-bottom:1px solid rgba(255,255,255,0.08);}
+  #modal h3.facts{color:#9affc4;} #modal h3.assum{color:#ffce6b;} #modal h3.fb{color:#56f0e0;}
+  #modal ul{list-style:none;}
+  #modal li{font-size:12px;line-height:1.55;color:var(--text);padding:5px 0 5px 18px;position:relative;}
+  #modal li::before{content:"▸";position:absolute;left:0;color:var(--petrova-soft);}
+  #modal li b{color:#fff;font-weight:600;}
+  #modal li .q{color:#ffce6b;font-weight:600;}
+  .m-close{position:sticky;top:-2px;float:right;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:#fff;width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:15px;line-height:1;z-index:2;}
+  .m-close:hover{background:rgba(255,59,92,0.2);}
+  #fbText{width:100%;min-height:80px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.14);border-radius:8px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12px;padding:10px;resize:vertical;}
+  #fbEmail{width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.14);border-radius:8px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12px;padding:9px 10px;margin-top:8px;}
+  #fbText:focus,#fbEmail:focus{outline:none;border-color:var(--petrova);}
+  .fb-row{display:flex;gap:10px;margin-top:10px;align-items:center;flex-wrap:wrap;}
+  .fb-row button{font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#fff;background:rgba(255,59,92,0.16);border:1px solid var(--petrova);border-radius:8px;padding:10px 18px;cursor:pointer;}
+  .fb-row button:hover{background:rgba(255,59,92,0.3);}
+  #fbStatus{font-size:11px;color:#9affc4;letter-spacing:0.5px;}
+  #fbFrame{border:0;width:100%;height:74vh;min-height:460px;border-radius:10px;background:rgba(255,255,255,0.02);display:block;}
+  .fb-open{font-size:11px;color:var(--text-dim);margin-top:8px;letter-spacing:0.3px;}
+  .fb-open a{color:#56f0e0;text-decoration:none;}
+  .fb-open a:hover{text-decoration:underline;}
+
+  @media (max-width:820px){
+    .panel{backdrop-filter:blur(8px);}
+    #header{max-width:none;right:18px;}
+    #telemetry{top:auto;bottom:18px;right:18px;left:18px;min-width:0;}
+    #controls{bottom:130px;left:18px;right:18px;min-width:0;}
+    #legend{display:none;}
+    #header{top:14px;left:14px;right:14px;padding:11px 14px;}
+    #header h1{font-size:13px;}
+  }
+</style>
+</head>
+<body>
+<canvas id="stage"></canvas>
+
+<div class="panel" id="header">
+  <h1><span class="accent">Petrova</span> Taskforce</h1>
+  <div class="sub">Solar Infection Model · Astrophage migration lifecycle<br>after <i>Project Hail Mary</i> — A. Weir</div>
+  <span class="badge">Petrovascope · 25.984 µm IR</span>
+</div>
+
+<div class="panel" id="telemetry">
+  <div class="tele-row" data-tip="Simulated time since the Petrova line and solar dimming were first detected (about 30 years before the 10% ice-age threshold). Shown in days, then years."><span class="tele-label">Days Since Detection</span><span class="tele-val" id="tDay">0</span></div>
+  <div class="tele-row" data-tip="Estimated astrophage cell count. The scale is illustrative: it climbs toward a peak near 30 quadrillion. Suffixes: K thousand, M million, B billion, T trillion, Qa quadrillion."><span class="tele-label">Astrophage Pop.</span><span class="tele-val" id="tPop">0</span></div>
+  <div class="tele-row" data-tip="Number of ~15-day migration cycles (charge at the Sun, breed at Venus, return) elapsed. Many cycles pass even though the net population grows slowly."><span class="tele-label">Generation</span><span class="tele-val" id="tGen">1</span></div>
+  <div class="tele-row" data-tip="Share of the Sun's light still reaching the planets. Astrophage dim it by at most ~10% before the infection stops, which is enough to trigger an ice age."><span class="tele-label">Solar Output</span><span class="tele-val" id="tSun">100<small>%</small></span></div>
+  <div class="tele-row" data-tip="How full the astrophage colony is versus its carrying-capacity ceiling (0–100%). This drives both the dimming and the on-screen astrophage density."><span class="tele-label">Astrophage Saturation</span><span class="tele-val" id="tSat">1<small>%</small></span></div>
+  <div class="tele-row" data-tip="The predator's bloom level once introduced. Taumoeba lives in Venus's CO₂ atmosphere and eats astrophage there, crashing the colony and letting the Sun recover."><span class="tele-label">Taumoeba</span><span class="tele-val" id="tTau">—</span></div>
+  <div id="statusLine">Monitoring</div>
+</div>
+
+<div class="panel" id="controls">
+  <div class="ctrl-title">◢ Taskforce Console</div>
+  <div class="slider-block">
+    <div class="slider-head"><label>Starting Astrophage Population</label><span class="v" id="vPop">≈30 T</span></div>
+    <input type="range" id="sPop" min="0" max="100" value="0" step="1">
+  </div>
+  <div class="slider-block">
+    <div class="slider-head"><label>Time Rate</label><span class="v" id="vRate">5.0 d/s</span></div>
+    <input type="range" id="sRate" min="0" max="100" value="33.676" step="any">
+  </div>
+  <div class="btn-row">
+    <button id="bPlay" class="active">❚❚ Pause</button>
+    <button id="bReset">↻ Reset</button>
+  </div>
+  <div class="toggle-row">
+    <button id="bRays" class="active">Light Rays</button>
+    <button id="bPetro" class="active">Petrova Glow</button>
+    <button id="bField">Field Lines</button>
+  </div>
+  <div class="btn-row" style="margin-top:8px;">
+    <button id="bTau" style="border-color:rgba(95,255,208,0.4);color:#bfffe6;">⊕ Introduce Taumoeba</button>
+    <button id="bView">⤢ Reset View</button>
+  </div>
+  <div class="btn-row" style="margin-top:8px;">
+    <button id="bGraph">▤ Graph</button>
+    <button id="bInfo">ⓘ Notes</button>
+    <button id="bFeedback">✉ Feedback</button>
+  </div>
+  <div class="hint">Net colony growth is calibrated to the book: from the ~0.01% dimming at first detection, dimming caps near <b>10%</b> around <b>year 30</b>. Introduce <b style="color:#56f0e0">Taumoeba</b> — the predator that lives in Venus' CO₂ atmosphere and eats astrophage where they breed — to crash the infection and watch the Sun recover. <b>Scroll / pinch to zoom, drag to pan</b>, double-click to reset. Lower the time rate to watch one cell's journey; raise it to span the decades.</div>
+</div>
+
+<div class="panel" id="legend">
+  <div class="leg-title">◢ Lifecycle States</div>
+  <div class="leg-item"><span class="leg-dot" style="color:#b084ff;background:#b084ff"></span>Inbound → Sun</div>
+  <div class="leg-item"><span class="leg-dot" style="color:var(--amber);background:var(--amber)"></span>Charging (8 d)</div>
+  <div class="leg-item"><span class="leg-dot" style="color:#b0ff4a;background:#b0ff4a"></span>Polar Ascent / Survey</div>
+  <div class="leg-item"><span class="leg-dot" style="color:var(--petrova);background:var(--petrova)"></span>Petrova Transit → Venus</div>
+  <div class="leg-item"><span class="leg-dot" style="color:var(--venus);background:var(--venus)"></span>Venus · &nbsp;<span class="leg-dot" style="color:var(--earth);background:var(--earth)"></span>Earth</div>
+  <div class="leg-item"><span class="leg-dot" style="color:#56f0e0;background:#56f0e0"></span>Taumoeba (Venus CO₂)</div>
+</div>
+
+<div class="panel" id="graphPanel">
+  <div class="gp-head">
+    <span class="gp-title">◢ Telemetry Traces</span>
+    <span class="gp-leg">
+      <span><i style="background:#ff3b5c"></i>Astrophage</span>
+      <span><i style="background:#ffb648"></i>Solar Output</span>
+      <span><i style="background:#56f0e0"></i>Taumoeba</span>
+    </span>
+  </div>
+  <canvas id="graphCanvas"></canvas>
+</div>
+
+<div id="modalBack">
+  <div id="modal">
+    <button class="m-close" id="mClose">✕</button>
+    <h2><span class="accent">Model</span> Notes</h2>
+    <div class="m-sub">A toy model of the Astrophage lifecycle from <i>Project Hail Mary</i> (Andy Weir). It is built to be illustrative and faithful to the book's framing — not a rigorous astrophysical simulation. Here's what we treat as canon versus what we invented to make it run.</div>
+
+    <h3 class="facts">✓ Facts (from the book &amp; author)</h3>
+    <ul>
+      <li>Astrophage is a single-celled organism ~10&nbsp;µm across with an Earth-like cell structure (DNA, ATP). It holds a constant internal temperature of <b>96.415&nbsp;°C</b> — absorbing excess heat as stored energy, and burning reserves to stay warm in the cold of space.</li>
+      <li>It "charges" at the Sun, converting stellar energy into mass near the <b>E=mc²</b> limit. A single cell can absorb about <b>1.5&nbsp;MJ</b> before it is <b>"enriched"</b> (can store no more) — per Dimitri Komorov's laser tests in the book.</li>
+      <li>Once enriched, it departs <b>straight away from the solar pole, then turns sharply toward Venus</b> — that path is the <b>Petrova line</b>. It responds to the Sun's magnetic field <b>only at the very start</b> of the trip, then locks onto Venus by its <b>CO₂ spectral signature</b>.</li>
+      <li>It reproduces by <b>cell division</b> in Venus's CO₂-rich upper atmosphere; <b>parent and child both return to the Sun</b>, so one migration cycle doubles the population.</li>
+      <li>It propels itself by emitting infrared at the <b>Petrova wavelength, 25.984&nbsp;µm</b> — the light that forms the Petrova line. (The 4.26&nbsp;µm and 18.31&nbsp;µm bands are the CO₂ emission peaks it homes on, and that the ship's spin drive uses to herd it — <b>not</b> its propulsion wavelength.)</li>
+      <li>It dims its host star and, for reasons the book <b>explicitly leaves unexplained</b>, stops at about <b>10% dimming</b>. A 10% drop is enough to trigger a terminal ice age within decades (worst in-book projection: 3.5 billion dead in ~19 years).</li>
+      <li>The Sun's fusion is untouched; the dimming is an <b>"umbrella" effect</b> — a vast shroud of cells absorbs light before it escapes to space.</li>
+      <li>Tau Ceti resisted infection because its planet (Adrian) hosts a predator microbe, <b>Taumoeba</b>, that keeps astrophage in check. Taumoeba <b>requires CO₂</b>, so it lives in the target planet's atmosphere and can't follow astrophage to the Sun; the Adrian strain dies at Venus's nitrogen levels (hence the bred "Taumoeba-82.5").</li>
+      <li>In <b>spore form</b> it can cross up to ~8 light-years between stars, drawn to starlight.</li>
+      <li>Per Weir, the physics is "mostly real" except the quantum-level detail of energy storage (neutrinos / pair production).</li>
+    </ul>
+
+    <h3 class="assum">⚙ Assumptions (ours, to make it run)</h3>
+    <ul>
+      <li><b>8-day charge time</b> at the Sun — a working figure. We did not find a specific charge duration stated in the book. (Gemini also cites "~8 days," but we treat it as unverified.)</li>
+      <li>We render the polar departure as a climb to the <b>north</b> pole to "<b>survey</b>" the planets for the most CO₂. The straight-out-from-the-solar-pole path <b>is canon</b>; the "rises to get a better view" motivation and choosing the north pole specifically are our embellishment.</li>
+      <li><b>"Unobstructed view" crowd-avoidance</b> — astrophage spread to less-crowded directions; our addition.</li>
+      <li><span class="q">The big one — growth rate.</span> Canon says each migration cycle <b>doubles</b> the population (parent + child both return) on a ~15-day cycle — which would shroud the Sun in months — yet canon <b>also</b> says ~30 years to 10% dimming. The book is internally in tension here. We reconcile it by <b>imposing</b> a slow logistic curve (~1.4% net per cycle, ~2.1-year doubling) tuned so the colony climbs from ~0.01% dimming at detection to the 10% ceiling in ~30 years — rather than deriving that rate. A real limiter — <b>self-shading</b> (a dense colony starving its own recruits of light), CO₂-limited breeding, or migration mortality — would make it emergent, and self-shading could even explain the unexplained 10% ceiling.</li>
+      <li>The carrying-capacity ceiling is a <b>stand-in</b> for that unknown limiter.</li>
+      <li>The head-count (carrying capacity ~3×10¹⁶) is <b>illustrative only</b>; the true number needed to physically block 10% of the Sun is vastly larger. (The book's one hard figure is per-cell: ~1.5 MJ when enriched.)</li>
+      <li>The clock starts at <b>first detection</b>. In the book, Dr. Irina Petrova spots the infrared <b>Petrova line</b> first; a solar probe then measures the Sun ~<b>0.01%</b> dimmer. We map that to ~0.1% of peak saturation (~<b>30 trillion cells</b>), and tune the growth so the 10% threshold arrives ~30 years later — matching the book. (Adjustable via the starting-population slider.)</li>
+      <li>Orbits are modeled as <b>circular and coplanar</b>; real Venus/Earth orbits are slightly eccentric and inclined.</li>
+      <li>Sun rotation is a uniform ~25 days (real equatorial value); no differential rotation.</li>
+      <li>Near-light-speed transits are <b>slowed</b> so they're visible.</li>
+      <li>Taumoeba predator-prey constants are <b>tuned for a watchable crash/recovery</b>, not measured; the nitrogen-tolerance failure mode is not modeled.</li>
+      <li>On-screen particles are a <b>representative visual sample</b>, decoupled from the true population count.</li>
+    </ul>
+
+    <h3 class="fb">✉ Help tighten the model</h3>
+    <div class="m-sub" style="margin-bottom:2px;">Spot a bad fact, remember a detail from the book, or have a better-justified assumption? Close this and tap <b>✉ Feedback</b> in the console — it directly improves the model.</div>
+  </div>
+</div>
+
+<div id="fbBack">
+  <div id="fbModal">
+    <button class="m-close" id="fbClose">✕</button>
+    <h2><span class="accent">Share</span> Feedback</h2>
+    <div class="m-sub">Spot a bad fact, remember a detail from the book, or have a better-justified assumption? It directly improves the model.</div>
+    <div id="fbFrameWrap">
+      <iframe id="fbFrame" data-src="https://form.getformly.com/f/2VxwD1" scrolling="yes" title="Astrophage model feedback" loading="lazy"></iframe>
+      <div class="fb-open">Form not loading? <a href="https://form.getformly.com/f/2VxwD1" target="_blank" rel="noopener">Open it in a new tab ↗</a></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  const cv = document.getElementById('stage');
+  const ctx = cv.getContext('2d');
+
+  // ---------- View / geometry ----------
+  const TILT = 62 * Math.PI/180;        // viewing inclination of the orbital plane
+  const cosT = Math.cos(TILT), sinT = Math.sin(TILT);
+  let W=0,H=0,DPR=1,cx=0,cy=0,scaleAU=1,sunR=24;
+  const view={zoom:1,panX:0,panY:0};
+  let sunSx=0,sunSy=0,sunRpx=24,zClamp=1;
+
+  const R_VENUS = 0.723, R_EARTH = 1.0; // AU
+  const P_VENUS = 224.7, P_EARTH = 365.25, P_SUN = 25.0; // days (orbital / rotation)
+
+  // lifecycle phase durations (days)
+  const D = {charge:8.0, ascend:1.6, survey:0.7, transit:1.7, breed:3.0};
+  const CYCLE = D.charge+D.ascend+D.survey+D.transit+D.breed;
+
+  // ---- Canonical population / dimming model (Project Hail Mary) ----
+  // Astrophage dim the Sun by AT MOST ~10%, then stop. The infection saturates
+  // logistically; "frac" is colony saturation 0..1 of carrying capacity.
+  // Growth is anchored to the book: from the ~0.01% dimming at first detection,
+  // the 10% ice-age threshold is reached ~30 years later.
+  const BLOCK_CEIL = 0.105;     // max fraction of solar output blocked (~10%)
+  const R_GROW     = 0.000903;  // per-day logistic rate -> ~2.1yr doubling, 10% @ ~yr30
+  const K_COUNT    = 3.0e16;    // illustrative carrying-capacity head-count
+  function blocked(){ return BLOCK_CEIL*Math.min(1, state.frac); }
+  function solarOutput(){ return 1 - blocked(); }   // ~0.895 .. 1.0
+  function saturation(){ return Math.min(1, state.frac); } // visual infection progress
+
+  function resize(){
+    DPR = Math.min(window.devicePixelRatio||1, 2);
+    W = window.innerWidth; H = window.innerHeight;
+    cv.width = W*DPR; cv.height = H*DPR;
+    cv.style.width = W+'px'; cv.style.height = H+'px';
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    cx = W*0.5; cy = H*0.52;
+    const rEarthPx = Math.min(W,H)*0.40;
+    scaleAU = rEarthPx;          // px per AU
+    sunR = Math.max(16, Math.min(W,H)*0.032);
+    buildStars();
+  }
+
+  // project 3D (AU, plane=XY, north=+Z) to screen
+  function project(x,y,z){
+    const ox=cx+view.panX, oy=cy+view.panY, zm=view.zoom;
+    return {
+      sx: ox + x*scaleAU*zm,
+      sy: oy + (y*cosT - z*sinT)*scaleAU*zm,
+      depth: y - z*0.25            // larger = farther back
+    };
+  }
+  function planetPos(R, period, day, phase0){
+    const a = phase0 + 2*Math.PI*day/period;
+    return {x:R*Math.cos(a), y:R*Math.sin(a), z:0};
+  }
+  function sunSurface(latDeg, lonRad, scale){
+    const la = latDeg*Math.PI/180;
+    const r = (sunR/scaleAU)*(scale||1.0);
+    return {
+      x: r*Math.cos(la)*Math.cos(lonRad),
+      y: r*Math.cos(la)*Math.sin(lonRad),
+      z: r*Math.sin(la)
+    };
+  }
+
+  // ---------- Simulation state ----------
+  let state;
+  function freshState(){
+    return {
+      day:0, playing:true, timeRate:5,
+      startFrac:0.001, frac:0.001,
+      tau:{active:false, T:0, day0:0}, tauAgents:[],
+      sunAngle:0, venusPhase:Math.random()*6.28, earthPhase:Math.random()*6.28,
+      agents:[], rays:new Float32Array(120), bins:new Float32Array(72),
+      showRays:true, showPetro:true, showField:false, showGraph:false,
+      history:[{d:0,a:0.001,o:1-BLOCK_CEIL*0.001,t:0}], lastSample:0, sampleEvery:20
+    };
+  }
+  // Taumoeba predator-prey constants (tuned for a watchable crash + recovery)
+  const TAU = {p:0.0016, c:0.010, m:0.0006, seed:0.02, Tmax:5};
+
+  // ---------- Agent ----------
+  function rand(a,b){return a+Math.random()*(b-a);}
+  function makeAgent(phase){
+    const a = {
+      phase:phase||0, t:0, dur:1, prev:null,
+      landLat:rand(-28,28), landLon:rand(0,6.283), spiral:rand(2.2,3.4),
+      apex:null, p0:null, p1:null, p2:null, pos:{x:0,y:0,z:0},
+      venusAng:rand(0,6.283)
+    };
+    initPhase(a, a.phase, true);
+    return a;
+  }
+  function venusNow(){ return planetPos(R_VENUS,P_VENUS,state.day,state.venusPhase); }
+  function earthNow(){ return planetPos(R_EARTH,P_EARTH,state.day,state.earthPhase); }
+
+  // pick least-crowded screen sector to spread plume / petrova line (rule 5)
+  function quietAngle(){
+    let mi=0,mv=1e9;
+    for(let i=0;i<state.bins.length;i++){ if(state.bins[i]<mv){mv=state.bins[i];mi=i;} }
+    return (mi+0.5)/state.bins.length*2*Math.PI - Math.PI;
+  }
+
+  function initPhase(a, phase, atStart){
+    a.phase = phase; a.t = 0;
+    if(phase===0){ // INBOUND: from Venus to sun surface landing pt
+      a.dur = rand(2.4,3.6);
+      const v = venusNow();
+      const land = sunSurface(a.landLat, a.landLon, 1.02);
+      a.p0 = atStart? {x:rand(-R_EARTH,R_EARTH),y:rand(-R_EARTH,R_EARTH),z:rand(-0.15,0.15)} : {x:v.x,y:v.y,z:0};
+      a.p2 = land;
+      a.p1 = {x:(a.p0.x+land.x)*0.5*0.6, y:(a.p0.y+land.y)*0.5*0.6, z:(a.p0.z+land.z)*0.5+rand(-0.1,0.1)};
+    } else if(phase===1){ // CHARGING on surface
+      a.dur = D.charge*rand(0.9,1.1);
+    } else if(phase===2){ // ASCEND along axis to apex above plane
+      a.dur = D.ascend;
+      const lon = a.landLon + state.sunAngle;
+      a.p0 = sunSurface(85, lon, 1.0);
+      const qa = quietAngle();
+      const spread = 0.10 + 0.32*coverage();
+      a.apex = {x:Math.cos(qa)*spread, y:Math.sin(qa)*spread*0.6, z:rand(0.46,0.62)};
+    } else if(phase===3){ // SURVEY hover at apex
+      a.dur = D.survey;
+      if(!a.apex){ const qa=quietAngle(); a.apex={x:Math.cos(qa)*0.2,y:Math.sin(qa)*0.12,z:rand(0.46,0.62)}; }
+    } else if(phase===4){ // TRANSIT to Venus (Petrova line)
+      a.dur = D.transit;
+      if(!a.apex){ const qa=quietAngle(); a.apex={x:Math.cos(qa)*0.2,y:Math.sin(qa)*0.12,z:rand(0.46,0.62)}; }
+      a.venusAng = Math.random()*6.283;
+    } else if(phase===5){ // BREED at Venus
+      a.dur = D.breed*rand(0.85,1.15);
+      a.bu = rand(-1,1); a.bphi = rand(0,6.283);
+      a.br = (sunR/scaleAU)*(0.35+0.6*Math.random())+0.02;
+    }
+  }
+
+  function bez(p0,p1,p2,t){
+    const u=1-t;
+    return {
+      x:u*u*p0.x+2*u*t*p1.x+t*t*p2.x,
+      y:u*u*p0.y+2*u*t*p1.y+t*t*p2.y,
+      z:u*u*p0.z+2*u*t*p1.z+t*t*p2.z
+    };
+  }
+  function lerp(a,b,t){return {x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,z:a.z+(b.z-a.z)*t};}
+
+  function updateAgent(a, dd){
+    a.prev = {x:a.pos.x,y:a.pos.y,z:a.pos.z};
+    a.t += dd/a.dur;
+    let guard=0;
+    while(a.t>=1 && guard<12){
+      const leftover=(a.t-1)*a.dur;   // days overshot into next phase
+      advance(a);                     // sets new phase, dur, and a.t=0
+      a.t = leftover/a.dur;
+      guard++;
+    }
+    if(a.t>1) a.t=1;
+    const t=a.t;
+    switch(a.phase){
+      case 0: a.pos = bez(a.p0,a.p1,a.p2,t); break;
+      case 1: { // charging: spiral poleward, co-rotate with sun
+        const lat = a.landLat + (84 - a.landLat)*t;
+        const lon = a.landLon + state.sunAngle + a.spiral*t;
+        a.pos = sunSurface(lat, lon, 1.02);
+        break;
+      }
+      case 2: { const p=lerp(a.p0,a.apex,t*(2-t)); a.pos=p; break; } // ease-out climb
+      case 3: { a.pos={x:a.apex.x,y:a.apex.y,z:a.apex.z+Math.sin(t*6.28)*0.012}; break; }
+      case 4: { // transit toward live Venus position -> Petrova arc
+        const v = venusNow();
+        const ctrl = {x:(a.apex.x+v.x)*0.5*1.15, y:(a.apex.y+v.y)*0.5*1.15, z:a.apex.z*0.55};
+        a.pos = bez(a.apex, ctrl, v, t);
+        break;
+      }
+      case 5: { // breeding: 3D cloud hugging Venus
+        const v=venusNow();
+        const u=a.bu, s=Math.sqrt(1-u*u), ph=a.bphi + t*1.6;
+        a.pos={ x:v.x + a.br*s*Math.cos(ph), y:v.y + a.br*s*Math.sin(ph), z:a.br*u };
+        break;
+      }
+    }
+  }
+  function advance(a){
+    const next = (a.phase+1)%6;
+    if(a.phase===5){ // finished breeding -> recycle (population handled analytically)
+      initPhase(a, 0, false);
+    } else {
+      initPhase(a, next, false);
+    }
+  }
+
+  // ---------- Taumoeba (predator) swarm — lives in Venus' CO2 atmosphere ----------
+  function makeTau(){
+    return {
+      u: rand(-1,1), phi: rand(0,6.283), r: rand(0.012,0.052),
+      spin: rand(0.4,1.1)*(Math.random()<0.5?-1:1), ph: rand(0,6.283)
+    };
+  }
+  function updateTau(a, dd){
+    a.phi += a.spin*dd*0.1;
+    a.ph  += dd*0.5;
+    const v = venusNow();
+    const u=a.u, s=Math.sqrt(1-u*u);
+    const r = a.r*(0.85+0.15*Math.sin(a.ph));
+    a.pos = { x:v.x + r*s*Math.cos(a.phi), y:v.y + r*s*Math.sin(a.phi), z:r*u };
+  }
+
+  // ---------- Population dynamics (logistic infection curve) ----------
+  function coverage(){ return saturation(); } // 0..1 colony saturation (drives visuals)
+  function targetAgents(){
+    const base = 50 + 1550*saturation();
+    return Math.round(Math.min(1700, base));
+  }
+
+  function step(dd){
+    state.day += dd;
+    state.sunAngle += 2*Math.PI*dd/P_SUN;
+
+    // population ODEs (substep for accuracy at high time rates)
+    const tz = state.tau;
+    let rem = dd;
+    while(rem > 1e-6){
+      const h = Math.min(rem, 2.0);          // <=2-day substeps
+      const A = state.frac, T = tz.active? tz.T : 0;
+      const dA = R_GROW*A*(1-A) - TAU.p*A*T;
+      state.frac = Math.max(1e-6, Math.min(1, A + dA*h));
+      if(tz.active){
+        const dT = T*(TAU.c*A - TAU.m);
+        tz.T = Math.max(1e-5, Math.min(TAU.Tmax*1.4, T + dT*h));
+      }
+      rem -= h;
+    }
+
+    // agents (visual migration sample) — independent of net growth rate
+    const tgt = targetAgents();
+    while(state.agents.length < tgt) state.agents.push(makeAgent(Math.floor(rand(0,6))));
+    if(state.agents.length > tgt) state.agents.length = tgt;
+    for(const a of state.agents) updateAgent(a, dd);
+
+    // taumoeba swarm (visual predators)
+    if(tz.active){
+      const tt = Math.round(Math.min(420, 420*(tz.T/TAU.Tmax)));
+      while(state.tauAgents.length < tt) state.tauAgents.push(makeTau());
+      if(state.tauAgents.length > tt) state.tauAgents.length = tt;
+      for(const a of state.tauAgents) updateTau(a, dd);
+    } else if(state.tauAgents.length){ state.tauAgents.length = 0; }
+
+    // sample time-series for the graph
+    if(state.day - state.lastSample >= state.sampleEvery){
+      state.lastSample = state.day;
+      state.history.push({d:state.day, a:saturation(), o:solarOutput(), t:state.tau.active?Math.min(1,state.tau.T/TAU.Tmax):0});
+      if(state.history.length > 1400){
+        state.history = state.history.filter((_,i)=>i%2===0);
+        state.sampleEvery *= 2;
+      }
+    }
+  }
+
+  // ---------- Background ----------
+  let stars=[];
+  function buildStars(){
+    stars=[];
+    const n=Math.round(W*H/5200);
+    for(let i=0;i<n;i++){
+      stars.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.3+0.2,a:Math.random()*0.6+0.15,tw:Math.random()*6.28});
+    }
+  }
+  function drawBackground(time){
+    const g=ctx.createRadialGradient(cx,cy,0,cx,cy,Math.max(W,H)*0.85);
+    g.addColorStop(0,'#0b0d1a'); g.addColorStop(0.5,'#070812'); g.addColorStop(1,'#030308');
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    // faint nebula
+    const n=ctx.createRadialGradient(W*0.78,H*0.22,0,W*0.78,H*0.22,W*0.5);
+    n.addColorStop(0,'rgba(120,40,90,0.10)'); n.addColorStop(1,'transparent');
+    ctx.fillStyle=n; ctx.fillRect(0,0,W,H);
+    ctx.save(); ctx.globalCompositeOperation='lighter';
+    for(const s of stars){
+      const tw=0.6+0.4*Math.sin(time*0.0012+s.tw);
+      ctx.globalAlpha=s.a*tw;
+      ctx.fillStyle='#cdd8ff';
+      ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,6.283);ctx.fill();
+    }
+    ctx.restore();ctx.globalAlpha=1;
+  }
+
+  // ---------- Orbits ----------
+  function drawOrbit(R,col,frontHalf){
+    ctx.strokeStyle=col; ctx.lineWidth=1; ctx.setLineDash([4,7]);
+    ctx.beginPath();
+    let started=false;
+    for(let i=0;i<=180;i++){
+      const a=i/180*2*Math.PI;
+      const x=R*Math.cos(a), y=R*Math.sin(a);
+      const isFront = y<0;
+      if(frontHalf!==undefined && isFront!==frontHalf){started=false;continue;}
+      const p=project(x,y,0);
+      if(!started){ctx.moveTo(p.sx,p.sy);started=true;} else ctx.lineTo(p.sx,p.sy);
+    }
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  // ---------- Sun ----------
+  function drawSun(time){
+    const out = solarOutput();             // accurate: ~0.895 .. 1.0
+    const SX=sunSx, SY=sunSy, R=sunRpx;
+    // light rays escaping to space (attenuated where astrophage is dense)
+    if(state.showRays){
+      ctx.save(); ctx.globalCompositeOperation='lighter';
+      const NR=state.rays.length;
+      for(let i=0;i<NR;i++){
+        const ang=i/NR*2*Math.PI;
+        const block=state.rays[i];
+        const al=0.16*out*(1-0.9*block);
+        if(al<=0.004) continue;
+        const len=R*(2.2+1.6*out);
+        const x1=SX+Math.cos(ang)*R*1.05, y1=SY+Math.sin(ang)*R*1.05;
+        const x2=SX+Math.cos(ang)*(R+len), y2=SY+Math.sin(ang)*(R+len);
+        const lg=ctx.createLinearGradient(x1,y1,x2,y2);
+        lg.addColorStop(0,'rgba(255,214,140,'+al+')');
+        lg.addColorStop(1,'rgba(255,150,60,0)');
+        ctx.strokeStyle=lg; ctx.lineWidth=2.2;
+        ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+      }
+      ctx.restore();
+    }
+    // corona
+    ctx.save(); ctx.globalCompositeOperation='lighter';
+    const cor=ctx.createRadialGradient(SX,SY,R*0.5,SX,SY,R*(2.6+out));
+    cor.addColorStop(0,'rgba(255,220,150,'+(0.55*out+0.08)+')');
+    cor.addColorStop(0.4,'rgba(255,150,70,'+(0.20*out)+')');
+    cor.addColorStop(1,'transparent');
+    ctx.fillStyle=cor;ctx.beginPath();ctx.arc(SX,SY,R*(2.6+out),0,6.283);ctx.fill();
+    ctx.restore();
+    // photosphere
+    const ph=ctx.createRadialGradient(SX-R*0.3,SY-R*0.3,R*0.2,SX,SY,R);
+    ph.addColorStop(0,`rgb(255,${Math.round(225*out+30)},${Math.round(180*out)})`);
+    ph.addColorStop(0.7,`rgb(${Math.round(255)},${Math.round(150*out+40)},${Math.round(40*out+10)})`);
+    ph.addColorStop(1,`rgb(${Math.round(150+60*out)},${Math.round(60*out+20)},20)`);
+    ctx.fillStyle=ph;ctx.beginPath();ctx.arc(SX,SY,R,0,6.283);ctx.fill();
+    // infection mottling (surface coverage) — dark astrophage shading
+    const cov=coverage();
+    if(cov>0.02){
+      ctx.save();ctx.beginPath();ctx.arc(SX,SY,R,0,6.283);ctx.clip();
+      const blobs=Math.round(cov*70);
+      for(let i=0;i<blobs;i++){
+        const a=(i*2.39963 + state.sunAngle*0.4); // golden-angle, rotates with sun
+        const rr=Math.sqrt((i+0.5)/blobs)*R;
+        const bx=SX+Math.cos(a)*rr, by=SY+Math.sin(a)*rr*0.96;
+        const br=R*(0.06+0.05*((i*7)%5)/5);
+        ctx.fillStyle='rgba(20,2,12,'+(0.35+0.4*cov)+')';
+        ctx.beginPath();ctx.arc(bx,by,br,0,6.283);ctx.fill();
+      }
+      ctx.restore();
+    }
+    // rotation axis hint
+    ctx.strokeStyle='rgba(150,170,220,0.25)';ctx.lineWidth=1;ctx.setLineDash([2,4]);
+    const top=project(0,0,(sunR/scaleAU)*2.4), bot=project(0,0,-(sunR/scaleAU)*1.4);
+    ctx.beginPath();ctx.moveTo(bot.sx,bot.sy);ctx.lineTo(top.sx,top.sy);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='rgba(150,170,220,0.5)';ctx.font='9px IBM Plex Mono';ctx.textAlign='center';
+    ctx.fillText('N',top.sx,top.sy-6);
+
+    // field lines (optional)
+    if(state.showField){
+      ctx.strokeStyle='rgba(120,200,255,0.18)';ctx.lineWidth=1;
+      for(let k=0;k<8;k++){
+        const lon=k/8*2*Math.PI+state.sunAngle;
+        ctx.beginPath();
+        for(let j=0;j<=20;j++){
+          const lat=-80+160*j/20;
+          const bulge=1+0.5*Math.cos(lat*Math.PI/180);
+          const p=sunSurface(lat,lon,bulge);
+          const s=project(p.x,p.y,p.z);
+          if(j===0)ctx.moveTo(s.sx,s.sy);else ctx.lineTo(s.sx,s.sy);
+        }
+        ctx.stroke();
+      }
+    }
+  }
+
+  // ---------- Render agents + planets ----------
+  const STATE_COL = [
+    [176,132,255], // inbound  violet
+    [255,182,72],  // charging amber
+    [176,255,74],  // ascend   lime
+    [176,255,74],  // survey   lime
+    [255,59,92],   // transit  petrova
+    [240,211,154]  // breed at venus
+  ];
+  function drawAgents(){
+    // reset angular bins (for ray attenuation + crowd avoidance)
+    state.bins.fill(0);
+    // build a render list of agents + planets + taumoeba, sort by depth (back first)
+    const list=[];
+    for(const a of state.agents){ list.push({d:a.pos.y - a.pos.z*0.25, a:a}); }
+    for(const a of state.tauAgents){ list.push({d:a.pos.y - a.pos.z*0.25, tau:a}); }
+    const v=venusNow(), e=earthNow();
+    list.push({d:v.y, planet:'venus', pos:v});
+    list.push({d:e.y, planet:'earth', pos:e});
+    list.sort((p,q)=>q.d-p.d);
+
+    const psz=zClamp;
+    ctx.save();ctx.globalCompositeOperation='lighter';
+    for(const item of list){
+      if(item.planet){ drawPlanet(item.planet,item.pos); continue; }
+      if(item.tau){
+        const tp=project(item.tau.pos.x,item.tau.pos.y,item.tau.pos.z);
+        const pul=0.6+0.4*Math.sin(item.tau.ph*2);
+        ctx.fillStyle=`rgba(86,240,224,${0.75*pul})`;
+        ctx.beginPath();ctx.arc(tp.sx,tp.sy,1.7*psz,0,6.283);ctx.fill();
+        continue;
+      }
+      const a=item.a;
+      const p=project(a.pos.x,a.pos.y,a.pos.z);
+      // accumulate angular density around the (projected) sun
+      const ang=Math.atan2(p.sy-sunSy,p.sx-sunSx);
+      const bi=Math.floor((ang+Math.PI)/(2*Math.PI)*state.bins.length)%state.bins.length;
+      const dist=Math.hypot(p.sx-sunSx,p.sy-sunSy);
+      const w = 1/(1+dist/(sunRpx*4));
+      state.bins[bi]+=w;
+
+      let col=STATE_COL[a.phase];
+      let glow = state.showPetro?1:0.55;
+      let size = 1.6*psz;
+      // streaks for fast migration phases
+      if(a.prev && (a.phase===0||a.phase===2||a.phase===4)){
+        const pp=project(a.prev.x,a.prev.y,a.prev.z);
+        const lg=ctx.createLinearGradient(pp.sx,pp.sy,p.sx,p.sy);
+        lg.addColorStop(0,`rgba(${col[0]},${col[1]},${col[2]},0)`);
+        lg.addColorStop(1,`rgba(${col[0]},${col[1]},${col[2]},${0.5*glow})`);
+        ctx.strokeStyle=lg;ctx.lineWidth=(a.phase===4?2.0:1.4)*psz;
+        ctx.beginPath();ctx.moveTo(pp.sx,pp.sy);ctx.lineTo(p.sx,p.sy);ctx.stroke();
+        size = (a.phase===4?2.0:1.6)*psz;
+      }
+      const al=(a.phase===4||a.phase===2)?0.9*glow:0.7*glow;
+      ctx.fillStyle=`rgba(${col[0]},${col[1]},${col[2]},${al})`;
+      ctx.beginPath();ctx.arc(p.sx,p.sy,size,0,6.283);ctx.fill();
+    }
+    ctx.restore();
+
+    // normalize bins -> ray attenuation array
+    let mx=0.0001; for(let i=0;i<state.bins.length;i++) if(state.bins[i]>mx)mx=state.bins[i];
+    const NR=state.rays.length, NB=state.bins.length;
+    for(let i=0;i<NR;i++){
+      const bi=Math.floor(i/NR*NB);
+      // smooth across neighbours
+      const v0=state.bins[(bi-1+NB)%NB], v1=state.bins[bi], v2=state.bins[(bi+1)%NB];
+      state.rays[i]=Math.min(1,(v0*0.5+v1+v2*0.5)/(mx*2));
+    }
+  }
+  function drawPlanet(which,pos){
+    const p=project(pos.x,pos.y,pos.z);
+    // occlude if behind the sun
+    const behind = pos.y>0;
+    if(behind && Math.hypot(p.sx-sunSx,p.sy-sunSy)<sunRpx) return;
+    const isV=which==='venus';
+    const col=isV?'#f0d39a':'#5aa2ff';
+    const r=(isV?4.5:5)*zClamp;
+    // Taumoeba bloom haze around Venus (predators living in the CO2 atmosphere)
+    if(isV && state.tau.active && state.tau.T>0.02){
+      const tg=Math.min(1,state.tau.T/TAU.Tmax);
+      const hr=r*(3.5+9*tg);
+      const hz=ctx.createRadialGradient(p.sx,p.sy,r,p.sx,p.sy,hr);
+      hz.addColorStop(0,`rgba(86,240,224,${0.10+0.18*tg})`);
+      hz.addColorStop(1,'transparent');
+      ctx.fillStyle=hz;ctx.beginPath();ctx.arc(p.sx,p.sy,hr,0,6.283);ctx.fill();
+    }
+    // glow
+    const g=ctx.createRadialGradient(p.sx,p.sy,0,p.sx,p.sy,r*3.2);
+    g.addColorStop(0,(isV?'rgba(255,225,150,0.6)':'rgba(120,180,255,0.6)'));
+    g.addColorStop(1,'transparent');
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(p.sx,p.sy,r*3.2,0,6.283);ctx.fill();
+    ctx.fillStyle=col;ctx.beginPath();ctx.arc(p.sx,p.sy,r,0,6.283);ctx.fill();
+    // label
+    ctx.globalCompositeOperation='source-over';
+    ctx.fillStyle=isV?'rgba(240,211,154,0.85)':'rgba(120,170,255,0.85)';
+    ctx.font='10px Chakra Petch';ctx.textAlign='left';
+    ctx.fillText(isV?'VENUS':'EARTH',p.sx+r+5,p.sy+3);
+    ctx.globalCompositeOperation='lighter';
+  }
+
+  // ---------- Telemetry / UI ----------
+  function fmt(n){
+    if(n<1000) return Math.round(n).toString();
+    const u=['','K','M','B','T','Qa','Qi']; let i=0;
+    while(n>=1000&&i<u.length-1){n/=1000;i++;}
+    return n.toFixed(n<10?1:0)+' '+u[i];
+  }
+  const elDay=document.getElementById('tDay'),elPop=document.getElementById('tPop'),
+        elGen=document.getElementById('tGen'),elSun=document.getElementById('tSun'),
+        elSat=document.getElementById('tSat'),elTau=document.getElementById('tTau'),
+        elStatus=document.getElementById('statusLine');
+  function updateTelemetry(){
+    const yrs=state.day/365.25;
+    elDay.innerHTML = yrs<2
+      ? 'Day '+Math.floor(state.day)
+      : 'Yr '+yrs.toFixed(1)+'<small> · d'+Math.floor(state.day).toLocaleString()+'</small>';
+    elPop.textContent=fmt(saturation()*K_COUNT);
+    elGen.textContent=(Math.floor(state.day/CYCLE)+1).toLocaleString();
+    const out=solarOutput()*100;
+    elSun.innerHTML=out.toFixed(1)+'<small>%</small>';
+    elSat.innerHTML=Math.round(saturation()*100)+'<small>%</small>';
+    if(!state.tau.active){ elTau.textContent='—'; elTau.style.color=''; }
+    else {
+      const lvl=Math.round(100*Math.min(1,state.tau.T/TAU.Tmax));
+      elTau.innerHTML=lvl+'<small>% bloom</small>'; elTau.style.color='#56f0e0';
+    }
+    const dim=blocked()*100; // 0..10.5
+    let txt,bg,fg;
+    if(dim<0.5){txt='Monitoring';bg='rgba(120,255,180,0.12)';fg='#9affc4';}
+    else if(dim<3){txt='Dimming Confirmed';bg='rgba(255,200,90,0.14)';fg='#ffce6b';}
+    else if(dim<6){txt='Accelerating';bg='rgba(255,150,80,0.15)';fg='#ff9a5a';}
+    else if(dim<9.5){txt='Severe · Ice Age Imminent';bg='rgba(255,90,70,0.18)';fg='#ff7a5a';}
+    else{txt='⚠ Extinction-Level (~10%)';bg='rgba(255,59,92,0.22)';fg='#ff6b85';}
+    elStatus.textContent=txt;elStatus.style.background=bg;elStatus.style.color=fg;
+  }
+
+  // ---------- Telemetry graph ----------
+  const gcv=document.getElementById('graphCanvas'), gctx=gcv.getContext('2d');
+  function drawGraph(){
+    const w=gcv.clientWidth, h=gcv.clientHeight;
+    if(!w||!h) return;
+    if(gcv.width!==Math.round(w*DPR)||gcv.height!==Math.round(h*DPR)){
+      gcv.width=Math.round(w*DPR); gcv.height=Math.round(h*DPR);
+    }
+    const g=gctx; g.setTransform(DPR,0,0,DPR,0,0); g.clearRect(0,0,w,h);
+    const x0=30,x1=w-8,y0=8,y1=h-15;
+    g.font='8px IBM Plex Mono'; g.textBaseline='middle'; g.lineWidth=1;
+    for(let p=0;p<=100;p+=50){
+      const yy=y1-(p/100)*(y1-y0);
+      g.strokeStyle='rgba(255,255,255,0.07)';
+      g.beginPath();g.moveTo(x0,yy);g.lineTo(x1,yy);g.stroke();
+      g.fillStyle='rgba(255,255,255,0.35)';g.textAlign='right';g.fillText(p+'%',x0-4,yy);
+    }
+    const H=state.history;
+    const maxD=Math.max(H[H.length-1].d,1);
+    const X=d=>x0+(d/maxD)*(x1-x0), Y=v=>y1-v*(y1-y0);
+    g.fillStyle='rgba(255,255,255,0.4)';g.textBaseline='top';
+    g.textAlign='left';g.fillText('0',x0,y1+3);
+    g.textAlign='right';g.fillText((maxD/365.25).toFixed(maxD<365*5?1:0)+' yr',x1,y1+3);
+    if(H.length<2) return;
+    const line=(col,fn,wid)=>{
+      g.strokeStyle=col;g.lineWidth=wid;g.beginPath();
+      for(let i=0;i<H.length;i++){const xx=X(H[i].d),yy=Y(fn(H[i]));if(i===0)g.moveTo(xx,yy);else g.lineTo(xx,yy);}
+      g.stroke();
+    };
+    line('#ffb648',p=>p.o,1.4);   // solar output (0.895..1, sits high)
+    line('#56f0e0',p=>p.t,1.6);   // taumoeba
+    line('#ff3b5c',p=>p.a,1.8);   // astrophage saturation
+  }
+
+  // ---------- Loop ----------
+  function computeView(){
+    const s=project(0,0,0); sunSx=s.sx; sunSy=s.sy;
+    sunRpx=sunR*view.zoom;
+    zClamp=Math.max(0.65,Math.min(2.4,view.zoom));
+  }
+  let last=performance.now();
+  function frame(now){
+    const realDt=Math.min(0.05,(now-last)/1000); last=now;
+    if(state.playing) step(realDt*state.timeRate);
+    computeView();
+    drawBackground(now);
+    drawOrbit(R_EARTH,'rgba(90,162,255,0.20)');
+    drawOrbit(R_VENUS,'rgba(240,211,154,0.20)');
+    drawSun(now);
+    drawAgents();
+    updateTelemetry();
+    if(state.showGraph) drawGraph();
+    requestAnimationFrame(frame);
+  }
+
+  // ---------- Controls ----------
+  // start slider 0..100 -> initial saturation 0.001..0.316 (log); display as head-count
+  function fracFromSlider(v){ return 0.001*Math.pow(10, v/100*2.5); }
+  // time slider 0..100 -> 0.25 .. 1825 days/sec (log); 1825 d/s = 5 yr/s
+  function rateFromSlider(v){ return +(0.25*Math.pow(7300, v/100)).toFixed(2); }
+  function rateLabel(r){
+    if(r>=365) return (r/365.25).toFixed(r>=1825?1:2)+' yr/s';
+    if(r>=10)  return Math.round(r)+' d/s';
+    return r.toFixed(2)+' d/s';
+  }
+  const sPop=document.getElementById('sPop'),vPop=document.getElementById('vPop'),
+        sRate=document.getElementById('sRate'),vRate=document.getElementById('vRate');
+  function applyPop(){
+    const f=fracFromSlider(+sPop.value); state.startFrac=f;
+    state.frac=f; vPop.textContent=fmt(f*K_COUNT);
+  }
+  function applyRate(){
+    const r=rateFromSlider(+sRate.value); state.timeRate=r;
+    vRate.textContent=rateLabel(r);
+  }
+  sPop.addEventListener('input',applyPop);
+  sRate.addEventListener('input',applyRate);
+
+  const bPlay=document.getElementById('bPlay');
+  bPlay.addEventListener('click',()=>{
+    state.playing=!state.playing;
+    bPlay.textContent=state.playing?'❚❚ Pause':'▶ Play';
+    bPlay.classList.toggle('active',state.playing);
+  });
+  document.getElementById('bReset').addEventListener('click',()=>{
+    const keepRate=state.timeRate, keepRays=state.showRays, keepPetro=state.showPetro, keepField=state.showField, keepGraph=state.showGraph;
+    state=freshState(); state.timeRate=keepRate;
+    state.showRays=keepRays; state.showPetro=keepPetro; state.showField=keepField; state.showGraph=keepGraph;
+    applyPop();
+    state.playing=true;bPlay.textContent='❚❚ Pause';bPlay.classList.add('active');
+  });
+  function toggleBtn(id,key){
+    const b=document.getElementById(id);
+    b.addEventListener('click',()=>{state[key]=!state[key];b.classList.toggle('active',state[key]);});
+  }
+  toggleBtn('bRays','showRays');
+  toggleBtn('bPetro','showPetro');
+  toggleBtn('bField','showField');
+
+  // Taumoeba introduction (predator seeded into Venus' atmosphere)
+  const bTau=document.getElementById('bTau');
+  bTau.addEventListener('click',()=>{
+    const t=state.tau;
+    if(!t.active){
+      t.active=true; t.T=TAU.seed; t.day0=state.day;
+      bTau.textContent='✓ Taumoeba Active';
+      bTau.style.background='rgba(95,255,208,0.18)'; bTau.style.color='#dffff4';
+    } else {
+      t.active=false; t.T=0; state.tauAgents.length=0;
+      bTau.textContent='⊕ Introduce Taumoeba';
+      bTau.style.background=''; bTau.style.color='#bfffe6';
+    }
+  });
+  // reset Taumoeba button label when sim resets
+  const origReset=document.getElementById('bReset');
+  origReset.addEventListener('click',()=>{
+    bTau.textContent='⊕ Introduce Taumoeba';
+    bTau.style.background=''; bTau.style.color='#bfffe6';
+  });
+
+  // ---------- Zoom & pan ----------
+  function resetView(){ view.zoom=1; view.panX=0; view.panY=0; }
+  document.getElementById('bView').addEventListener('click',resetView);
+  cv.style.cursor='grab';
+  cv.addEventListener('wheel',(e)=>{
+    e.preventDefault();
+    const rect=cv.getBoundingClientRect();
+    const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+    const k=Math.exp(-e.deltaY*0.0014);
+    const nz=Math.max(0.35,Math.min(8,view.zoom*k));
+    const r=nz/view.zoom;
+    const ox=cx+view.panX, oy=cy+view.panY;
+    view.panX=(mx-r*(mx-ox))-cx;
+    view.panY=(my-r*(my-oy))-cy;
+    view.zoom=nz;
+  },{passive:false});
+
+  let dragging=false,lastX=0,lastY=0,pinchD=0;
+  cv.addEventListener('pointerdown',(e)=>{
+    dragging=true;lastX=e.clientX;lastY=e.clientY;cv.style.cursor='grabbing';
+    cv.setPointerCapture(e.pointerId);
+  });
+  cv.addEventListener('pointermove',(e)=>{
+    if(!dragging)return;
+    view.panX+=e.clientX-lastX; view.panY+=e.clientY-lastY;
+    lastX=e.clientX;lastY=e.clientY;
+  });
+  function endDrag(){dragging=false;cv.style.cursor='grab';}
+  cv.addEventListener('pointerup',endDrag);
+  cv.addEventListener('pointercancel',endDrag);
+  cv.addEventListener('dblclick',resetView);
+
+  // touch pinch-zoom
+  cv.addEventListener('touchmove',(e)=>{
+    if(e.touches.length===2){
+      e.preventDefault();
+      const dx=e.touches[0].clientX-e.touches[1].clientX;
+      const dy=e.touches[0].clientY-e.touches[1].clientY;
+      const d=Math.hypot(dx,dy);
+      const rect=cv.getBoundingClientRect();
+      const mx=(e.touches[0].clientX+e.touches[1].clientX)/2-rect.left;
+      const my=(e.touches[0].clientY+e.touches[1].clientY)/2-rect.top;
+      if(pinchD>0){
+        const nz=Math.max(0.35,Math.min(8,view.zoom*(d/pinchD)));
+        const r=nz/view.zoom, ox=cx+view.panX, oy=cy+view.panY;
+        view.panX=(mx-r*(mx-ox))-cx; view.panY=(my-r*(my-oy))-cy; view.zoom=nz;
+      }
+      pinchD=d; dragging=false;
+    }
+  },{passive:false});
+  cv.addEventListener('touchend',()=>{pinchD=0;});
+
+  // ---------- Graph toggle ----------
+  const bGraph=document.getElementById('bGraph'), graphPanel=document.getElementById('graphPanel');
+  bGraph.addEventListener('click',()=>{
+    state.showGraph=!state.showGraph;
+    bGraph.classList.toggle('active',state.showGraph);
+    graphPanel.classList.toggle('show',state.showGraph);
+  });
+
+  // ---------- Modals: Notes + Feedback ----------
+  const notesBack=document.getElementById('modalBack');
+  const fbBack=document.getElementById('fbBack');
+  const show=el=>el.classList.add('show'), hide=el=>el.classList.remove('show');
+  document.getElementById('bInfo').addEventListener('click',()=>show(notesBack));
+  document.getElementById('bFeedback').addEventListener('click',()=>{
+    show(fbBack);
+    const f=document.getElementById('fbFrame');
+    if(f && f.dataset.src && !f.dataset.loaded){ f.src=f.dataset.src; f.dataset.loaded='1'; }
+  });
+  document.getElementById('mClose').addEventListener('click',()=>hide(notesBack));
+  document.getElementById('fbClose').addEventListener('click',()=>hide(fbBack));
+  notesBack.addEventListener('click',(e)=>{ if(e.target===notesBack) hide(notesBack); });
+  fbBack.addEventListener('click',(e)=>{ if(e.target===fbBack) hide(fbBack); });
+  window.addEventListener('keydown',(e)=>{ if(e.key==='Escape'){ hide(notesBack); hide(fbBack); } });
+
+  // ---------- Feedback form (embedded Getformly) ----------
+  // The form is embedded as an iframe in the modal. If it is configured to redirect
+  // on submit, it posts a message asking the parent page to navigate there.
+  // We only trust messages coming from the form's own origin.
+  window.addEventListener('message', function(e){
+    if(typeof e.origin==='string' && e.origin.indexOf('getformly.com')===-1) return;
+    if(e.data && e.data.type==='redirect' && e.data.url){ window.location.href=e.data.url; }
+  });
+
+  // ---------- Init ----------
+  window.addEventListener('resize',resize);
+  resize();
+  state=freshState();
+  applyPop(); applyRate();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
