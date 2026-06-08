@@ -117,7 +117,7 @@
   .hint{font-size:9px;color:var(--text-dim);letter-spacing:0.5px;margin-top:10px;line-height:1.5;opacity:0.75;}
 
   /* Graph panel */
-  #graphPanel{bottom:18px;right:18px;width:380px;max-width:calc(100vw - 36px);padding:12px 14px 8px;display:none;}
+  #graphPanel{bottom:18px;right:18px;width:272px;max-width:calc(100vw - 36px);padding:12px 14px 8px;display:none;}
   #graphPanel.show{display:block;}
   .gp-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px;}
   .gp-title{font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:10px;letter-spacing:2px;color:var(--petrova-soft);text-transform:uppercase;}
@@ -335,6 +335,7 @@
     scaleAU = rEarthPx;          // px per AU
     sunR = Math.max(16, Math.min(W,H)*0.032);
     buildStars();
+    positionGraph();
   }
 
   // project 3D (AU, plane=XY, north=+Z) to screen
@@ -1005,10 +1006,17 @@
 
   // ---------- Graph toggle ----------
   const bGraph=document.getElementById('bGraph'), graphPanel=document.getElementById('graphPanel');
+  const controlsEl=document.getElementById('controls');
+  function positionGraph(){
+    if(!state || !state.showGraph) return;
+    const ch=controlsEl.getBoundingClientRect().height;
+    graphPanel.style.bottom=(18+ch+12)+'px';   // sit just above the Taskforce Console
+  }
   bGraph.addEventListener('click',()=>{
     state.showGraph=!state.showGraph;
     bGraph.classList.toggle('active',state.showGraph);
     graphPanel.classList.toggle('show',state.showGraph);
+    positionGraph();
   });
 
   // ---------- Modals: Notes + Feedback ----------
