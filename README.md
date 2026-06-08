@@ -10,7 +10,6 @@ An interactive, single-file web visualization of how **Astrophage** — the star
 
 Hosted on Github Page: `https://ohadios.github.io/astrophage-visual-model/`
 
-
 ---
 
 ## What it shows
@@ -34,7 +33,7 @@ A tilted, pseudo-3D view of the inner solar system with the full Astrophage life
 - **Taumoeba predator** — introduce/remove a Lotka–Volterra predator confined to Venus's atmosphere.
 - **Zoom & pan** — scroll/pinch to zoom, drag to pan, double-click to reset.
 - **Adjustable controls** — starting population (defaults to the first-detection baseline) and time rate (0.25 d/s up to 5 yr/s).
-- **Model Notes modal** — a transparent breakdown of what's canon vs. what we assumed.
+- **Model Notes modal** — a transparent breakdown of what's canon vs. what I assumed.
 - **Embedded feedback form** — collects corrections and suggestions to tighten the model.
 - **Zero dependencies / no build** — one self-contained HTML file; only external resource is Google Fonts over CDN.
 
@@ -59,6 +58,7 @@ In *Project Hail Mary*, Astrophage runs a closed migration loop driven by two ne
 The in-app **Notes** modal carries the authoritative, detailed version. In brief:
 
 ### Treated as canon (from the book)
+
 - ~10 µm single-celled organism; constant 96.415 °C; stores energy as mass (E=mc²); ~1.5 MJ per enriched cell.
 - Lifecycle: charge → depart the solar pole → CO₂-lock on Venus → breed → return (the Petrova line).
 - Propulsion / Petrova-line emission at **25.984 µm**; CO₂ detection bands at **4.26 µm and 18.31 µm** (these are *not* the propulsion wavelength).
@@ -66,8 +66,9 @@ The in-app **Notes** modal carries the authoritative, detailed version. In brief
 - Tau Ceti resisted because Adrian hosts **Taumoeba**, which needs CO₂ and dies at Venus's nitrogen levels (hence the bred "Taumoeba-82.5").
 
 ### My assumptions (to make it run)
+
 - **8-day charge time** — a working figure, not pinned down in the book.
-- **Growth rate** (the big one): canon implies each ~15-day cycle *doubles* the population, which would shroud the Sun in months — yet canon also says ~30 years to 10%. We reconcile this internal tension by imposing a slow logistic curve (~1.4% net per cycle, ~2.1-year doubling) so the colony climbs from ~0.01% dimming at detection to 10% in ~30 years. A real limiter (self-shading, CO₂-limited breeding, migration mortality) would make it emergent.
+- **Growth rate** (the big one): canon implies each ~15-day cycle *doubles* the population, which would shroud the Sun in months — yet canon also says ~30 years to 10%. I reconcile this internal tension by imposing a slow logistic curve (~1.4% net per cycle, ~2.1-year doubling) so the colony climbs from ~0.01% dimming at detection to 10% in ~30 years. A real limiter (self-shading, CO₂-limited breeding, migration mortality) would make it emergent.
 - **Detection start:** the clock begins at first detection (~0.01% dimming ≈ ~30 trillion cells ≈ 0.1% of peak).
 - **Head-count** (~3×10¹⁶ peak) is illustrative; the true number is vastly larger.
 - Circular/coplanar orbits, uniform 25-day Sun rotation, slowed near-light-speed transits, tuned Taumoeba predator-prey constants, and on-screen particles as a representative visual sample.
@@ -76,19 +77,19 @@ The in-app **Notes** modal carries the authoritative, detailed version. In brief
 
 ## Controls reference
 
-| Control | What it does |
-| --- | --- |
-| **Starting Astrophage Population** | Sets the initial colony size. Defaults to the first-detection baseline (~30 T / ~0.01% dimming). |
-| **Time Rate** | Simulation speed, 0.25 d/s up to 5 yr/s. Low = watch one cell's journey; high = span the decades. |
-| **❚❚ Pause / ▶ Play** | Pause or resume. |
-| **↻ Reset** | Restart from the current slider settings. |
-| **Light Rays / Petrova Glow / Field Lines** | Toggle visual layers. |
-| **⊕ Introduce Taumoeba** | Seed the predator into Venus's atmosphere (toggle off to remove). |
-| **⤢ Reset View** | Reset zoom/pan. |
-| **▤ Graph** | Show/hide the time-series traces. |
-| **ⓘ Notes** | Facts & assumptions. |
-| **✉ Feedback** | Open the feedback form. |
-| Mouse/touch | Scroll or pinch to zoom, drag to pan, double-click to reset view. |
+| Control                                     | What it does                                                                                      |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| **Starting Astrophage Population**          | Sets the initial colony size. Defaults to the first-detection baseline (~30 T / ~0.01% dimming).  |
+| **Time Rate**                               | Simulation speed, 0.25 d/s up to 5 yr/s. Low = watch one cell's journey; high = span the decades. |
+| **❚❚ Pause / ▶ Play**                       | Pause or resume.                                                                                  |
+| **↻ Reset**                                 | Restart from the current slider settings.                                                         |
+| **Light Rays / Petrova Glow / Field Lines** | Toggle visual layers.                                                                             |
+| **⊕ Introduce Taumoeba**                    | Seed the predator into Venus's atmosphere (toggle off to remove).                                 |
+| **⤢ Reset View**                            | Reset zoom/pan.                                                                                   |
+| **▤ Graph**                                 | Show/hide the time-series traces.                                                                 |
+| **ⓘ Notes**                                 | Facts & assumptions.                                                                              |
+| **✉ Feedback**                              | Open the feedback form.                                                                           |
+| Mouse/touch                                 | Scroll or pinch to zoom, drag to pan, double-click to reset view.                                 |
 
 ---
 
@@ -124,7 +125,7 @@ The app embeds a feedback form behind the **✉ Feedback** button so visitors ca
 ## Credits & attribution
 
 - Concept and all *Project Hail Mary* lore © **Andy Weir**. This project is an unofficial, non-commercial fan tribute and is not affiliated with or endorsed by the author or publisher.
-- Built collaboratively as an exploration of the Astrophage lifecycle and population dynamics.
+- Built as a solo exploration of the Astrophage lifecycle and population dynamics.
 
 ## License
 
