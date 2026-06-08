@@ -44,7 +44,7 @@ A tilted, pseudo-3D view of the inner solar system with the full Astrophage life
 In *Project Hail Mary*, Astrophage runs a closed migration loop driven by two needs — stellar energy and CO₂ to reproduce:
 
 1. **Charge at the Sun.** A cell absorbs stellar energy and stores it as mass near the E=mc² limit. It holds a constant internal temperature of 96.415 °C and can bank ~1.5 MJ before it is "enriched."
-2. **Depart the pole.** Once enriched, it launches straight away from the solar pole (it only responds to the Sun's magnetic field at the very start of the trip), then turns sharply toward Venus.
+2. **Depart the pole.** Once enriched, it launches straight up the solar pole axis (it only responds to the Sun's magnetic field at the very start of the trip). Right at the Sun the glare washes everything out, so it first climbs straight up to clear the star; only at the top, with an unobstructed view, does it turn and lock onto Venus.
 3. **The Petrova line.** That curved path glows in infrared at 25.984 µm — the line first spotted by Dr. Irina Petrova, and the signature that revealed the crisis.
 4. **Breed at Venus.** In Venus's CO₂-rich upper atmosphere it divides; parent *and* child both fly back to the Sun.
 5. **Dim the star.** A growing shroud of cells absorbs sunlight before it escapes — an "umbrella" effect (the Sun's fusion is untouched). It stops at ~10% dimming for reasons the book leaves unexplained, which is enough to trigger a terminal ice age.
@@ -68,6 +68,7 @@ The in-app **Notes** modal carries the authoritative, detailed version. In brief
 ### My assumptions (to make it run)
 
 - **8-day charge time** — a working figure, not pinned down in the book.
+- **Vertical climb before the turn** — the straight-out-from-the-pole launch is canon, but the "blinded by the glare until it clears the Sun, then sights Venus" motivation, the apex height, and choosing the north pole specifically are my embellishment.
 - **Growth rate** (the big one): canon implies each ~15-day cycle *doubles* the population, which would shroud the Sun in months — yet canon also says ~30 years to 10%. I reconcile this internal tension by imposing a slow logistic curve (~1.4% net per cycle, ~2.1-year doubling) so the colony climbs from ~0.01% dimming at detection to 10% in ~30 years. A real limiter (self-shading, CO₂-limited breeding, migration mortality) would make it emergent.
 - **Detection start:** the clock begins at first detection (~0.01% dimming ≈ ~30 trillion cells ≈ 0.1% of peak).
 - **Head-count** (~3×10¹⁶ peak) is illustrative; the true number is vastly larger.
