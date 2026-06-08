@@ -60,9 +60,9 @@
   }
 
   /* Telemetry */
-  #topright{position:fixed;top:18px;right:18px;z-index:5;display:flex;flex-direction:column;gap:12px;width:240px;}
+  #topright{position:fixed;top:18px;right:18px;z-index:5;display:flex;flex-direction:column;gap:12px;width:272px;}
   #telemetry{position:static;width:100%;padding:14px 16px;}
-  .tele-row{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px dashed rgba(255,255,255,0.06);position:relative;cursor:help;}
+  .tele-row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:5px 0;border-bottom:1px dashed rgba(255,255,255,0.06);position:relative;cursor:help;}
   .tele-row[data-tip]:hover::after{
     content:attr(data-tip);position:absolute;right:calc(100% + 14px);top:-6px;width:232px;
     background:rgba(9,11,20,0.97);border:1px solid var(--panel-line);border-radius:9px;
@@ -70,8 +70,8 @@
     text-transform:none;font-weight:400;box-shadow:0 10px 28px rgba(0,0,0,0.6);z-index:40;pointer-events:none;
   }
   .tele-row:last-child{border-bottom:none;}
-  .tele-label{font-size:9.5px;letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;}
-  .tele-val{font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:16px;letter-spacing:0.5px;}
+  .tele-label{font-size:9.5px;letter-spacing:1.2px;color:var(--text-dim);text-transform:uppercase;white-space:nowrap;}
+  .tele-val{font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:16px;letter-spacing:0.5px;white-space:nowrap;}
   .tele-val small{font-size:10px;font-weight:400;color:var(--text-dim);margin-left:3px;}
   #statusLine{
     margin-top:10px;text-align:center;font-family:'Chakra Petch',sans-serif;
@@ -117,7 +117,7 @@
   .hint{font-size:9px;color:var(--text-dim);letter-spacing:0.5px;margin-top:10px;line-height:1.5;opacity:0.75;}
 
   /* Graph panel */
-  #graphPanel{bottom:18px;left:50%;transform:translateX(-50%);width:400px;max-width:calc(100vw - 36px);padding:12px 14px 8px;display:none;}
+  #graphPanel{bottom:18px;right:18px;width:380px;max-width:calc(100vw - 36px);padding:12px 14px 8px;display:none;}
   #graphPanel.show{display:block;}
   .gp-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px;}
   .gp-title{font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:10px;letter-spacing:2px;color:var(--petrova-soft);text-transform:uppercase;}
@@ -189,7 +189,7 @@
   <div class="leg-title">◢ Lifecycle States</div>
   <div class="leg-item"><span class="leg-dot" style="color:#b084ff;background:#b084ff"></span>Inbound → Sun</div>
   <div class="leg-item"><span class="leg-dot" style="color:var(--amber);background:var(--amber)"></span>Charging (8 d)</div>
-  <div class="leg-item"><span class="leg-dot" style="color:#b0ff4a;background:#b0ff4a"></span>Polar Ascent / Survey</div>
+  <div class="leg-item"><span class="leg-dot" style="color:#ff745c;background:#ff745c"></span>Polar Ascent / Survey</div>
   <div class="leg-item"><span class="leg-dot" style="color:var(--petrova);background:var(--petrova)"></span>Petrova Transit → Venus</div>
   <div class="leg-item"><span class="leg-dot" style="color:var(--venus);background:var(--venus)"></span>Venus · &nbsp;<span class="leg-dot" style="color:var(--earth);background:var(--earth)"></span>Earth</div>
   <div class="leg-item"><span class="leg-dot" style="color:#56f0e0;background:#56f0e0"></span>Taumoeba (Venus CO₂)</div>
@@ -380,7 +380,7 @@
   function rand(a,b){return a+Math.random()*(b-a);}
   function makeAgent(phase){
     const a = {
-      phase:phase||0, t:0, dur:1, prev:null,
+      phase:phase||0, t:0, dur:1, prev:null, trail:[],
       landLat:rand(-28,28), landLon:rand(0,6.283), spiral:rand(2.2,3.4),
       apex:null, p0:null, p1:null, p2:null, pos:{x:0,y:0,z:0},
       venusAng:rand(0,6.283)
@@ -475,6 +475,15 @@
         break;
       }
     }
+    // Petrova-line trail: sample positions through the outbound journey
+    // (polar ascent + survey + transit) so the path renders as a continuous line.
+    if(a.phase===2||a.phase===3||a.phase===4){
+      const tr=a.trail, last=tr.length?tr[tr.length-1]:null;
+      if(!last || (a.pos.x-last.x)**2+(a.pos.y-last.y)**2+(a.pos.z-last.z)**2 > 4.9e-5){
+        tr.push({x:a.pos.x,y:a.pos.y,z:a.pos.z});
+        if(tr.length>46) tr.shift();
+      }
+    } else if(a.trail.length){ a.trail.length=0; }
   }
   function advance(a){
     const next = (a.phase+1)%6;
@@ -677,8 +686,8 @@
   const STATE_COL = [
     [176,132,255], // inbound  violet
     [255,182,72],  // charging amber
-    [176,255,74],  // ascend   lime
-    [176,255,74],  // survey   lime
+    [255,116,92],  // ascend   petrova-warm
+    [255,116,92],  // survey   petrova-warm
     [255,59,92],   // transit  petrova
     [240,211,154]  // breed at venus
   ];
@@ -717,15 +726,27 @@
       let col=STATE_COL[a.phase];
       let glow = state.showPetro?1:0.55;
       let size = 1.6*psz;
-      // streaks for fast migration phases
-      if(a.prev && (a.phase===0||a.phase===2||a.phase===4)){
+      // Petrova line: render the sampled trail as a fading, connected stroke
+      if((a.phase===2||a.phase===3||a.phase===4) && a.trail.length>1){
+        const tr=a.trail;
+        const tail=project(tr[0].x,tr[0].y,tr[0].z);
+        const lg=ctx.createLinearGradient(tail.sx,tail.sy,p.sx,p.sy);
+        lg.addColorStop(0,`rgba(${col[0]},${col[1]},${col[2]},0)`);
+        lg.addColorStop(1,`rgba(${col[0]},${col[1]},${col[2]},${0.6*glow})`);
+        ctx.strokeStyle=lg;ctx.lineWidth=(a.phase===4?1.9:1.5)*psz;
+        ctx.lineCap='round';ctx.lineJoin='round';
+        ctx.beginPath();ctx.moveTo(tail.sx,tail.sy);
+        for(let k=1;k<tr.length;k++){const pk=project(tr[k].x,tr[k].y,tr[k].z);ctx.lineTo(pk.sx,pk.sy);}
+        ctx.lineTo(p.sx,p.sy);ctx.stroke();
+        size=(a.phase===4?2.0:1.7)*psz;
+      } else if(a.prev && a.phase===0){
+        // short inbound streak
         const pp=project(a.prev.x,a.prev.y,a.prev.z);
         const lg=ctx.createLinearGradient(pp.sx,pp.sy,p.sx,p.sy);
         lg.addColorStop(0,`rgba(${col[0]},${col[1]},${col[2]},0)`);
         lg.addColorStop(1,`rgba(${col[0]},${col[1]},${col[2]},${0.5*glow})`);
-        ctx.strokeStyle=lg;ctx.lineWidth=(a.phase===4?2.0:1.4)*psz;
+        ctx.strokeStyle=lg;ctx.lineWidth=1.4*psz;
         ctx.beginPath();ctx.moveTo(pp.sx,pp.sy);ctx.lineTo(p.sx,p.sy);ctx.stroke();
-        size = (a.phase===4?2.0:1.6)*psz;
       }
       const al=(a.phase===4||a.phase===2)?0.9*glow:0.7*glow;
       ctx.fillStyle=`rgba(${col[0]},${col[1]},${col[2]},${al})`;
